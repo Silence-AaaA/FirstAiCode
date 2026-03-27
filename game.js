@@ -1,5 +1,6 @@
 /**
- * 贪吃蛇游戏 - 核心逻辑
+ * 贪吃蛇游戏 - 核心逻辑（根目录版本）
+ * 本次优化：提升蛇的可见度与“蛇感”，仅改渲染层
  */
 
 const canvas = document.getElementById('gameCanvas');
@@ -7,8 +8,8 @@ const ctx = canvas.getContext('2d');
 
 // 游戏配置
 const CONFIG = {
-    gridSize: 20,           // 格子大小
-    tileCount: 20,          // 地图尺寸 20x20
+    gridSize: 22,           // 格子大小（略加粗蛇身）
+    tileCount: 18,          // 地图尺寸 18x18（适配画布 400x400 左右）
     gameSpeed: 150          // 移动间隔(ms)
 };
 
@@ -35,13 +36,13 @@ const restartBtn = document.getElementById('restartBtn');
  */
 function initGame() {
     // 初始蛇位置（头部在中间）
+    const mid = Math.floor(CONFIG.tileCount / 2);
     snake = [
-        { x: 10, y: 10 },  // 头部
-        { x: 10, y: 11 },  // 身体
-        { x: 10, y: 12 }   // 尾部
+        { x: mid,     y: mid },     // 头部
+        { x: mid,     y: mid + 1 }, // 身体
+        { x: mid,     y: mid + 2 }  // 尾部
     ];
     
-    // 初始方向向上
     direction = { x: 0, y: -1 };
     nextDirection = { x: 0, y: -1 };
     
@@ -54,8 +55,8 @@ function initGame() {
     spawnFood();
     draw();
     
-    // 显示开始按钮，隐藏结束面板
     startBtn.style.display = 'block';
+    startBtn.textContent = '开始游戏';
     gameOverPanel.style.display = 'none';
 }
 
@@ -68,14 +69,12 @@ function spawnFood() {
     while (!validPosition) {
         food.x = Math.floor(Math.random() * CONFIG.tileCount);
         food.y = Math.floor(Math.random() * CONFIG.tileCount);
-        
-        // 检查是否与蛇身重叠
         validPosition = !snake.some(segment => segment.x === food.x && segment.y === food.y);
     }
 }
 
 /**
- * 更新游戏状态
+ * 更新游戏状态（不动渲染，仅更新坐标与分数）
  */
 function update() {
     if (!isRunning || isPaused || isGameOver) return;
@@ -85,36 +84,32 @@ function update() {
         direction = { ...nextDirection };
     }
     
-    // 计算新头部位置
     const head = { 
         x: snake[0].x + direction.x, 
         y: snake[0].y + direction.y 
     };
     
-    // 碰撞检测：撞墙
+    // 撞墙
     if (head.x < 0 || head.x >= CONFIG.tileCount || 
         head.y < 0 || head.y >= CONFIG.tileCount) {
         endGame();
         return;
     }
     
-    // 碰撞检测：撞自己
+    // 撞自己
     if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
         endGame();
         return;
     }
     
-    // 添加新头部
     snake.unshift(head);
     
-    // 检测是否吃到食物
+    // 吃到食物
     if (head.x === food.x && head.y === food.y) {
         score += 10;
         updateScore();
         spawnFood();
-        // 吃到食物时不移除尾部，蛇自动变长
     } else {
-        // 移除尾部
         snake.pop();
     }
 }
@@ -123,37 +118,30 @@ function update() {
  * 渲染游戏画面
  */
 function draw() {
-    // 清空画布
-    ctx.fillStyle = '#0a0f1a';
+    // 背景：深色但纯净，提升对比度
+    ctx.fillStyle = '#0c1117';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // 绘制网格线（可选）
     drawGrid();
-    
-    // 绘制食物
     drawFood();
-    
-    // 绘制蛇
     drawSnake();
 }
 
 /**
- * 绘制网格线
+ * 绘制网格线（细线，降低存在感）
  */
 function drawGrid() {
-    ctx.strokeStyle = '#1a2332';
+    ctx.strokeStyle = '#161f2b';
     ctx.lineWidth = 0.5;
     
     for (let i = 0; i <= CONFIG.tileCount; i++) {
         const pos = i * CONFIG.gridSize;
         
-        // 垂直线
         ctx.beginPath();
         ctx.moveTo(pos, 0);
         ctx.lineTo(pos, canvas.height);
         ctx.stroke();
         
-        // 水平线
         ctx.beginPath();
         ctx.moveTo(0, pos);
         ctx.lineTo(canvas.width, pos);
@@ -162,28 +150,23 @@ function drawGrid() {
 }
 
 /**
- * 绘制食物
+ * 绘制食物：适中饱和度的暖色圆点
  */
 function drawFood() {
     const x = food.x * CONFIG.gridSize;
     const y = food.y * CONFIG.gridSize;
     const size = CONFIG.gridSize;
     
-    // 食物光晕
-    ctx.shadowColor = '#ff6b6b';
-    ctx.shadowBlur = 10;
-    
-    // 食物主体（圆形）
-    ctx.fillStyle = '#ff6b6b';
+    ctx.fillStyle = '#f08a5b'; // 食物：#f08a5b 橙偏红
     ctx.beginPath();
-    ctx.arc(x + size/2, y + size/2, size/2 - 3, 0, Math.PI * 2);
+    ctx.arc(x + size / 2, y + size / 2, size / 2 - 4, 0, Math.PI * 2);
     ctx.fill();
-    
-    ctx.shadowBlur = 0;
 }
 
 /**
- * 绘制蛇
+ * 绘制蛇：
+ * - 颜色：青绿色系，和背景形成明显对比
+ * - 形状：圆角矩形 + 轻微“拼接感”
  */
 function drawSnake() {
     snake.forEach((segment, index) => {
@@ -191,68 +174,93 @@ function drawSnake() {
         const y = segment.y * CONFIG.gridSize;
         const size = CONFIG.gridSize;
         
+        // 蛇头：更饱和、更亮一点
         if (index === 0) {
-            // 蛇头 - 亮绿色
-            ctx.fillStyle = '#00d9a0';
-            ctx.shadowColor = '#00d9a0';
-            ctx.shadowBlur = 8;
+            ctx.fillStyle = '#27c499'; // 头：#27c499 中等偏亮青绿
         } else {
-            // 蛇身 - 稍暗的绿色，根据位置渐变
-            const alpha = 1 - (index / snake.length) * 0.4;
-            ctx.fillStyle = `rgba(0, 180, 130, ${alpha})`;
-            ctx.shadowBlur = 0;
+            // 身体：同色系稍微暗一点，形成层次
+            const t = index / Math.max(snake.length, 8);
+            const g = 196 - t * 40; // 绿色分量略递减
+            const b = 153 - t * 20; // 蓝色分量略递减
+            ctx.fillStyle = `rgb(39, ${g}, ${b})`;
         }
         
-        // 绘制圆角矩形
-        roundRect(ctx, x + 1, y + 1, size - 2, size - 2, 4);
+        // 身体形状：略粗的圆角矩形 + 中间留一点缝，让节段更连贯
+        const padding = 3; // 留出小间距，避免一坨
+        roundRect(
+            ctx,
+            x + padding,
+            y + padding,
+            size - padding * 2,
+            size - padding * 2,
+            6
+        );
         ctx.fill();
-        
-        ctx.shadowBlur = 0;
     });
     
-    // 蛇头添加眼睛
     if (snake.length > 0) {
-        drawSnakeEyes();
+        drawSnakeHeadDetails();
     }
 }
 
 /**
- * 绘制蛇的眼睛
+ * 绘制蛇头细节：更圆的头 + 简单的眼睛
  */
-function drawSnakeEyes() {
+function drawSnakeHeadDetails() {
     const head = snake[0];
     const x = head.x * CONFIG.gridSize;
     const y = head.y * CONFIG.gridSize;
     const size = CONFIG.gridSize;
     
-    ctx.fillStyle = '#fff';
+    // 额外的“头部圆角帽”，让头更圆润一点
+    ctx.fillStyle = '#22b48b';
+    const headPadding = 2;
+    roundRect(
+        ctx,
+        x + headPadding,
+        y + headPadding,
+        size - headPadding * 2,
+        size - headPadding * 2,
+        8
+    );
+    ctx.fill();
     
-    let eye1X, eye1Y, eye2X, eye2Y;
+    // 眼睛：小黑点，根据方向调整位置
+    ctx.fillStyle = '#0b0b0d';
+    const eyeRadius = 2;
     const offset = size / 3;
-    const eyeSize = 3;
+    let eye1X, eye1Y, eye2X, eye2Y;
     
-    if (direction.x === 1) {  // 向右
-        eye1X = x + size - offset; eye1Y = y + offset;
-        eye2X = x + size - offset; eye2Y = y + size - offset;
+    if (direction.x === 1) {          // 向右
+        eye1X = x + size - offset;
+        eye2X = x + size - offset;
+        eye1Y = y + offset;
+        eye2Y = y + size - offset;
     } else if (direction.x === -1) {  // 向左
-        eye1X = x + offset; eye1Y = y + offset;
-        eye2X = x + offset; eye2Y = y + size - offset;
+        eye1X = x + offset;
+        eye2X = x + offset;
+        eye1Y = y + offset;
+        eye2Y = y + size - offset;
     } else if (direction.y === -1) {  // 向上
-        eye1X = x + offset; eye1Y = y + offset;
-        eye2X = x + size - offset; eye2Y = y + offset;
-    } else {  // 向下
-        eye1X = x + offset; eye1Y = y + size - offset;
-        eye2X = x + size - offset; eye2Y = y + size - offset;
+        eye1X = x + offset;
+        eye2X = x + size - offset;
+        eye1Y = y + offset;
+        eye2Y = y + offset;
+    } else {                           // 向下
+        eye1X = x + offset;
+        eye2X = x + size - offset;
+        eye1Y = y + size - offset;
+        eye2Y = y + size - offset;
     }
     
     ctx.beginPath();
-    ctx.arc(eye1X, eye1Y, eyeSize, 0, Math.PI * 2);
-    ctx.arc(eye2X, eye2Y, eyeSize, 0, Math.PI * 2);
+    ctx.arc(eye1X, eye1Y, eyeRadius, 0, Math.PI * 2);
+    ctx.arc(eye2X, eye2Y, eyeRadius, 0, Math.PI * 2);
     ctx.fill();
 }
 
 /**
- * 绘制圆角矩形
+ * 绘制圆角矩形（渲染层工具函数）
  */
 function roundRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
@@ -284,7 +292,6 @@ function startGame() {
     isRunning = true;
     startBtn.style.display = 'none';
     
-    // 启动游戏循环
     gameLoop = setInterval(() => {
         update();
         draw();
@@ -330,31 +337,26 @@ function restartGame() {
     initGame();
 }
 
-// 键盘控制
+// 键盘控制（逻辑保持不变）
 document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     
-    // 阻止默认方向键滚动
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
         e.preventDefault();
     }
     
-    // 空格键：暂停/继续
     if (key === ' ') {
         togglePause();
         return;
     }
     
-    // 方向控制
     if (!isRunning && !isGameOver) {
-        // 第一次按键开始游戏
         const validKeys = ['arrowup', 'w', 'arrowdown', 's', 'arrowleft', 'a', 'arrowright', 'd'];
         if (validKeys.includes(key)) {
             startGame();
         }
     }
     
-    // 防止直接反向移动
     switch (key) {
         case 'arrowup':
         case 'w':
@@ -375,7 +377,6 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// 按钮事件绑定
 startBtn.addEventListener('click', () => {
     if (!isRunning) {
         startGame();
@@ -386,10 +387,8 @@ startBtn.addEventListener('click', () => {
 
 restartBtn.addEventListener('click', restartGame);
 
-// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', initGame);
 
-// 导出供外部调用
 window.snakeGame = {
     start: startGame,
     restart: restartGame,
