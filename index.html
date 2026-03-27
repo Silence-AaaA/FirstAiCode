@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇 - 游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- 标题 -->
+        <h1 class="game-title"><span>🐍</span>SNAKE</h1>
+        
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="score-display">
+                <span class="score-label">得分：</span>
+                <span id="scoreValue" class="score-value">0</span>
+            </div>
+            <div class="game-info">按空格键暂停</div>
+        </div>
+        
+        <!-- 游戏画布 -->
+        <div class="canvas-wrapper">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            
+            <!-- 开始/暂停覆盖层 -->
+            <div id="startOverlay" class="start-overlay">
+                <button id="startBtn" class="btn btn-start">开始游戏</button>
+            </div>
+            
+            <!-- 游戏结束面板 -->
+            <div id="gameOverPanel" class="game-over-panel">
+                <h2 class="game-over-title">GAME OVER</h2>
+                <div class="final-score">
+                    最终得分
+                    <span id="finalScore">0</span>
+                </div>
+                <button id="restartBtn" class="btn btn-restart">再来一局</button>
+            </div>
+        </div>
+        
+        <!-- 操作提示 -->
+        <div class="controls-hint">
+            <div class="control-item">
+                <span class="key">↑↓←→</span>
+                <span>或</span>
+                <span class="key">WASD</span>
+                <span>移动</span>
+            </div>
+            <div class="control-item">
+                <span class="key">空格</span>
+                <span>暂停</span>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
